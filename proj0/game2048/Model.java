@@ -1,6 +1,10 @@
 package game2048;
 
+import static java.lang.Math.abs;
+
 import java.util.Formatter;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Observable;
 
 
@@ -177,9 +181,43 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        // 2 empty space || two adjacent tiles with the same value
+        if (emptySpaceExists(b)) {
+            return true;
+        }
+        int size = b.size();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                Tile tile = b.tile(i, j);
+                List<Tile> adjacentTiles = getAdjacentTiles(b, tile);
+                for (Tile tileToCompare : adjacentTiles) {
+                    if (tile.value() == tileToCompare.value()) {
+                        return true;
+                    }
+                }
+            }
+        }
         return false;
     }
 
+    private static List<Tile> getAdjacentTiles(Board b, Tile t) {
+        int currentCol = t.col();
+        int currentRow = t.row();
+        List<Tile> adjacentTiles = new LinkedList<>();
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if ((abs(i + j) == 1) && isValidIndex(b, currentCol + i, currentRow + j)) {
+                    adjacentTiles.add(b.tile(currentCol + i, currentRow + j));
+                }
+            }
+        }
+        return adjacentTiles;
+    }
+
+    private static boolean isValidIndex(Board b, int col, int row) {
+        int size = b.size();
+        return (col >= 0 && col < size && row >=0 && row < size);
+    }
 
     @Override
      /** Returns the model as a string, used for debugging. */
