@@ -118,58 +118,59 @@ public class Model extends Observable {
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
         int size = board.size();
+        board.setViewingPerspective(side);
 
         List<TileGroup> tileGroups = new LinkedList<>();
-        if (side == Side.NORTH) {
-            // find all tile groups
-            for (int col = 0; col < size; col++) {
-                Tile firstNonNullTile = getFirstNonNullTile(col, 0);
-                while (firstNonNullTile != null) {
-                    Tile nextNonNullTile = getFirstNonNullTile(col, firstNonNullTile.row() + 1);
-                    if (nextNonNullTile == null) {
-                        break;
-                    }
-                    if (nextNonNullTile.value() != firstNonNullTile.value()) {
-                        firstNonNullTile = nextNonNullTile;
-                        continue;
-                    }
-                    TileGroup tileGroup = new TileGroup(firstNonNullTile);
-                    tileGroup.addTile(nextNonNullTile);
-                    tileGroups.add(tileGroup);
-                    firstNonNullTile = getFirstNonNullTile(col, nextNonNullTile.row());
+
+        // find all tile groups
+        for (int col = 0; col < size; col++) {
+            Tile firstNonNullTile = getFirstNonNullTile(col, size - 1);
+            while (firstNonNullTile != null) {
+                Tile nextNonNullTile = getFirstNonNullTile(col, firstNonNullTile.row() - 1);
+                if (nextNonNullTile == null) {
+                    break;
                 }
+                if (nextNonNullTile.value() != firstNonNullTile.value()) {
+                    firstNonNullTile = nextNonNullTile;
+                    continue;
+                }
+                TileGroup tileGroup = new TileGroup(firstNonNullTile);
+                tileGroup.addTile(nextNonNullTile);
+                tileGroups.add(tileGroup);
+                firstNonNullTile = getFirstNonNullTile(col, nextNonNullTile.row() - 1);
             }
+        }
 
-            // mergeTiles
-            if (tileGroups != null) {
-                changed = true;
-                tileGroups.forEach(
-                    (tileGroup) -> mergeSingleTilePair(tileGroup)
-                );
-            }
+        // mergeTiles
+        if (!tileGroups.isEmpty()) {
+            changed = true;
+            tileGroups.forEach(
+                (tileGroup) -> mergeSingleTilePair(tileGroup)
+            );
+        }
 
-            // loop until nothing change
-            boolean isMoved = true;
-            while (isMoved) {
-                isMoved = false;
-                for (int col = 0; col < size; col++) {
-                    Tile firstNonNullTile = getFirstNonNullTile(col, 0);
-                    while (firstNonNullTile != null && (firstNonNullTile.row() + 1) < size) {
-                        if (board.tile(col, firstNonNullTile.row() + 1) == null) {
-                            isMoved = true;
-                            changed = true;
-                            board.move(col, firstNonNullTile.row() + 1, firstNonNullTile);
-                            firstNonNullTile = getFirstNonNullTile(col, firstNonNullTile.row() + 1);
-                        }
+        // loop until nothing change
+        boolean isMoved = true;
+        while (isMoved) {
+            isMoved = false;
+            for (int col = 0; col < size; col++) {
+                for (int row = size - 1; row >= 0; row--) {
+                    Tile firstNonNullTile = getFirstNonNullTile(col, row);
+                    if (board.tile(col, row) == null && firstNonNullTile != null){
+                        board.move(col, row, firstNonNullTile);
+                        isMoved = true;
+                        changed = true;
                     }
                 }
             }
         }
+
 
         checkGameOver();
         if (changed) {
             setChanged();
         }
+        board.setViewingPerspective(Side.NORTH);
         return changed;
     }
 
@@ -185,21 +186,27 @@ public class Model extends Observable {
         }
 
         if (first.row() < second.row()) {
+            score += second.value() * 2;
             board.move(second.col(), second.row(), first);
         }
         else {
+            score += second.value() * 2;
             board.move(first.col(), first.row(), second);
         }
     }
 
 
     // start from given row and get first tile which is not null
+    // from top to bottom
     // return tile is in the given col
     private Tile getFirstNonNullTile(int col, int row) {
         int size = board.size();
-        for (int i = row; i < size; i++) {
-            if (board.tile(col, row) != null) {
-                return board.tile(col, row);
+        if (row >= size || row < 0) {
+            return null;
+        }
+        for (int i = row; i >= 0; i--) {
+            if (board.tile(col, i) != null) {
+                return board.tile(col, i);
             }
         }
         return null;
