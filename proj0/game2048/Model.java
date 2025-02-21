@@ -123,6 +123,7 @@ public class Model extends Observable {
         List<TileGroup> tileGroups = new LinkedList<>();
 
         // find all tile groups
+        /*
         for (int col = 0; col < size; col++) {
             Tile firstNonNullTile = getFirstNonNullTile(col, size - 1);
             while (firstNonNullTile != null) {
@@ -147,6 +148,15 @@ public class Model extends Observable {
             tileGroups.forEach(
                 (tileGroup) -> mergeSingleTilePair(tileGroup)
             );
+        }
+
+         */
+        // check each column and merge
+        for (int i = 0; i < size; i++) {
+            if(mergeOneColumn(i)) {
+                changed = true;
+            }
+
         }
 
         // loop until nothing change
@@ -193,6 +203,41 @@ public class Model extends Observable {
             score += second.value() * 2;
             board.move(first.col(), first.row(), second);
         }
+    }
+
+    // merge one column, return if any merge happen
+    private boolean mergeOneColumn(int col) {
+        boolean merged = false;
+        int size = board.size();
+        Tile tilePrev = null;
+        int rowPrev = -1;
+        int colPrev = -1;
+        for (int row = size - 1; row >= 0; row--) {
+            if (board.tile(col, row) == null) {
+                continue;
+            }
+            // first non-null tile
+            if (tilePrev == null) {
+                tilePrev = board.tile(col, row);
+                rowPrev = row;
+                colPrev = col;
+                continue;
+            }
+            // non-first non-null tile
+            if (board.tile(col, row).value() == tilePrev.value()) {
+                score += tilePrev.value() * 2;
+                board.move(colPrev, rowPrev, board.tile(col, row));
+                merged = true;
+                tilePrev = null;
+                rowPrev = -1;
+                colPrev = -1;
+                continue;
+            }
+            tilePrev = board.tile(col, row);
+            rowPrev = row;
+            colPrev = col;
+        }
+        return merged;
     }
 
 
