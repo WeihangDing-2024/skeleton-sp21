@@ -120,43 +120,11 @@ public class Model extends Observable {
         int size = board.size();
         board.setViewingPerspective(side);
 
-        List<TileGroup> tileGroups = new LinkedList<>();
-
-        // find all tile groups
-        /*
-        for (int col = 0; col < size; col++) {
-            Tile firstNonNullTile = getFirstNonNullTile(col, size - 1);
-            while (firstNonNullTile != null) {
-                Tile nextNonNullTile = getFirstNonNullTile(col, firstNonNullTile.row() - 1);
-                if (nextNonNullTile == null) {
-                    break;
-                }
-                if (nextNonNullTile.value() != firstNonNullTile.value()) {
-                    firstNonNullTile = nextNonNullTile;
-                    continue;
-                }
-                TileGroup tileGroup = new TileGroup(firstNonNullTile);
-                tileGroup.addTile(nextNonNullTile);
-                tileGroups.add(tileGroup);
-                firstNonNullTile = getFirstNonNullTile(col, nextNonNullTile.row() - 1);
-            }
-        }
-
-        // mergeTiles
-        if (!tileGroups.isEmpty()) {
-            changed = true;
-            tileGroups.forEach(
-                (tileGroup) -> mergeSingleTilePair(tileGroup)
-            );
-        }
-
-         */
         // check each column and merge
         for (int i = 0; i < size; i++) {
             if(mergeOneColumn(i)) {
                 changed = true;
             }
-
         }
 
         // loop until nothing change
@@ -175,7 +143,6 @@ public class Model extends Observable {
             }
         }
 
-
         checkGameOver();
         if (changed) {
             setChanged();
@@ -184,26 +151,6 @@ public class Model extends Observable {
         return changed;
     }
 
-    // Move single tile pair to one place and change the value
-    private void mergeSingleTilePair(TileGroup tileGroup) {
-        if (tileGroup.size() != 2) {
-            throw new IllegalArgumentException("Should be 2.");
-        }
-        Tile first = tileGroup.getTileGroup().getFirst();
-        Tile second = tileGroup.getTileGroup().getLast();
-        if (first.value() != second.value()) {
-            throw new IllegalArgumentException("Should have same value.");
-        }
-
-        if (first.row() < second.row()) {
-            score += second.value() * 2;
-            board.move(second.col(), second.row(), first);
-        }
-        else {
-            score += second.value() * 2;
-            board.move(first.col(), first.row(), second);
-        }
-    }
 
     // merge one column, return if any merge happen
     private boolean mergeOneColumn(int col) {
